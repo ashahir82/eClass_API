@@ -13,17 +13,33 @@ if(isset($_GET['username'])) {
 		// output data of each row
 		while ($rowModule = mysqli_fetch_assoc($module)) {
 			$rowsResult = array();
-			$result = mysqli_query($GLOBALS["con"],"SELECT * FROM `enroll` RIGHT JOIN `topic` ON `enroll`.`topic_id` = `topic`.`topic_id` WHERE (`username` IS NULL OR `username` = '$username') AND `module_id` = " . $rowModule['module_id'] . " ORDER BY `topic`.`le_no`");
+			//$result = mysqli_query($GLOBALS["con"],"SELECT * FROM `enroll` RIGHT JOIN `topic` ON `enroll`.`topic_id` = `topic`.`topic_id` WHERE (`username` IS NULL OR `username` = '$username') AND `module_id` = " . $rowModule['module_id'] . " ORDER BY `topic`.`le_no`");
+			$result = mysqli_query($GLOBALS["con"],"SELECT `topic`.* FROM `topic` WHERE `topic`.`module_id` = " . $rowModule['module_id'] . " ORDER BY `topic`.`le_no`");
 			while ($rowResult = mysqli_fetch_assoc($result)) {
-				$rowsResult[] = array(
-					'leno' => ($rowResult['le_no'] < 10) ? "0" . $rowResult['le_no'] : $rowResult['le_no'],
-					'topic' => $rowResult['topic_id'],
-					'name' => $rowResult['name'],
-					'datetime' => $rowResult['datetime'],
-					'note' => $rowResult['note'],
-					'quiz' => $rowResult['quiz'],
-					'active' => $rowResult['active']
-				);
+				$rowc = mysqli_query($GLOBALS["con"],"SELECT `note`, `quiz`, `active` FROM `enroll` WHERE `topic_id` = " . $rowResult['topic_id'] . " AND `username` = '$username'");
+				if (mysqli_num_rows($rowc) != 0) {
+					while ($erow = mysqli_fetch_array($rowc)) {
+						$rowsResult[] = array(
+							'topic_id' => $rowResult['topic_id'],
+							'module_id' => $rowResult['module_id'],
+							'le_no' => ($rowResult['le_no'] < 10) ? "0" . $rowResult['le_no'] : $rowResult['le_no'],
+							'name' => $rowResult['name'],
+							'note' => $erow['note'],
+							'quiz' => $erow['quiz'],
+							'active' => $erow['active']
+						);
+					}
+				} else {
+					$rowsResult[] = array(
+						'topic_id' => $rowResult['topic_id'],
+						'module_id' => $rowResult['module_id'],
+						'le_no' => ($rowResult['le_no'] < 10) ? "0" . $rowResult['le_no'] : $rowResult['le_no'],
+						'name' => $rowResult['name'],
+						'note' => NULL,
+						'quiz' => NULL,
+						'active' => NULL
+					);
+				}
 			}
 			$rows[] = array(
 				'module_id' => $rowModule['module_id'],
